@@ -76,3 +76,24 @@ app.get('/reserve_seat', (req, res) => {
     console.log(`Seat reservation job ${job.id} failed: ${errorMessage}`);
   });
 });
+
+app.get('/process', async (req, res) => {
+  queue.process(queueName, async (job, done) => {
+    let availableSeats = await getCurrentAvailableSeats();
+
+    if (availableSeats <= 0) {
+      done(Error('Not enough seats available'));
+    }
+
+    availableSeats = Number(availableSeats) - 1;
+
+    reserveSeat(availableSeats);
+
+    if (availableSeats <= 0) {
+      reservationEnabled = false;
+    }
+
+    done();
+  });
+  res.json({ status: 'Queue processing' });
+});
