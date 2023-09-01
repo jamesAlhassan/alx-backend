@@ -87,3 +87,26 @@ app.get('/list_products/:itemId', async (req, res) => {
   res.json(item);
 });
 
+app.get('/reserve_product/:itemId', async (req, res) => {
+  const itemId = Number(req.params.itemId);
+  const item = getItemById(itemId);
+  const noStock = { status: 'Not enough stock available', itemId };
+  const reservationConfirmed = { status: 'Reservation confirmed', itemId };
+
+  if (!item) {
+    res.json(notFound);
+    return;
+  }
+
+  let currentStock = await getCurrentReservedStockById(itemId);
+  if (currentStock === null) currentStock = item.initialAvailableQuantity;
+
+  if (currentStock <= 0) {
+    res.json(noStock);
+    return;
+  }
+
+  reserveStockById(itemId, Number(currentStock) - 1);
+
+  res.json(reservationConfirmed);
+});
