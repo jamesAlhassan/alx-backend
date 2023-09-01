@@ -31,3 +31,9 @@ client.on('connect', () => {
 
   reserveSeat(50);
   reservationEnabled = true;
+});
+
+// kue  =================================================
+
+const queue = kue.createQueue();
+const queueName = 'reserve_seat';
