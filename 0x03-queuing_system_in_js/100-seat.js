@@ -37,3 +37,42 @@ client.on('connect', () => {
 
 const queue = kue.createQueue();
 const queueName = 'reserve_seat';
+
+// express  =================================================
+
+const app = express();
+const port = 1245;
+
+app.listen(port, () => {
+  console.log(`app listening at http://localhost:${port}`);
+});
+
+app.get('/available_seats', async (req, res) => {
+  const availableSeats = await getCurrentAvailableSeats();
+  res.json({ numberOfAvailableSeats: availableSeats });
+});
+
+app.get('/reserve_seat', (req, res) => {
+  if (reservationEnabled === false) {
+    res.json({ status: 'Reservation are blocked' });
+    return;
+  }
+
+  const jobFormat = {};
+
+  const job = queue.create(queueName, jobFormat).save((err) => {
+    if (err) {
+      res.json({ status: 'Reservation failed' });
+    } else {
+      res.json({ status: 'Reservation in process' });
+    }
+  });
+
+  job.on('complete', () => {
+    console.log(`Seat reservation job ${job.id} completed`);
+  });
+
+  job.on('failed', (errorMessage) => {
+    console.log(`Seat reservation job ${job.id} failed: ${errorMessage}`);
+  });
+});
