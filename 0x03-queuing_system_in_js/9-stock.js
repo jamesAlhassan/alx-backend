@@ -57,3 +57,33 @@ async function getCurrentReservedStockById(itemId) {
   return stock;
 }
 
+const app = express();
+const port = 1245;
+
+const notFound = { status: 'Product not found' };
+
+app.listen(port, () => {
+  console.log(`app listening at http://localhost:${port}`);
+});
+
+app.get('/list_products', (req, res) => {
+  res.json(listProducts);
+});
+
+app.get('/list_products/:itemId', async (req, res) => {
+  const itemId = Number(req.params.itemId);
+  const item = getItemById(itemId);
+
+  if (!item) {
+    res.json(notFound);
+    return;
+  }
+
+  const currentStock = await getCurrentReservedStockById(itemId);
+  const stock =
+    currentStock !== null ? currentStock : item.initialAvailableQuantity;
+
+  item.currentQuantity = stock;
+  res.json(item);
+});
+
