@@ -30,3 +30,30 @@ const listProducts = [
     initialAvailableQuantity: 5,
   },
 ];
+
+function getItemById(id) {
+  return listProducts.filter((item) => item.itemId === id)[0];
+}
+
+// redis ==========================================
+
+const client = redis.createClient();
+const getAsync = promisify(client.get).bind(client);
+
+client.on('error', (error) => {
+  console.log(`Redis client not connected to the server: ${error.message}`);
+});
+
+client.on('connect', () => {
+  console.log('Redis client connected to the server');
+});
+
+function reserveStockById(itemId, stock) {
+  client.set(`item.${itemId}`, stock);
+}
+
+async function getCurrentReservedStockById(itemId) {
+  const stock = await getAsync(`item.${itemId}`);
+  return stock;
+}
+
